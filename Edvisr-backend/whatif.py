@@ -7,13 +7,7 @@ from google import genai
 # Load environment variables
 load_dotenv()
 
-# Validate API key once
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise RuntimeError("GOOGLE_API_KEY is not configured.")
-
-# Create ONE persistent client
-client = genai.Client(api_key=api_key)
+from app.ai import get_ai_client
 
 
 def generate_what_if_question(topic: str) -> str:
@@ -36,7 +30,7 @@ Output format:
 - A single sentence phrased as a question
 """
 
-    response = client.models.generate_content(
+    response = get_ai_client().models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
         config={

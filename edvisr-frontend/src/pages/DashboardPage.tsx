@@ -5,6 +5,7 @@ import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
 import type { Classroom } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 type ClassOverview = {
   classInfo: Classroom;
@@ -25,6 +26,7 @@ function relativeDateLabel(rawIso: string | null): string {
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const { refreshContext } = useTeacher();
   const [classOverviews, setClassOverviews] = useState<ClassOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,37 +42,36 @@ export function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      const teacher = await api.getMe();
-      const classes = await api.getClasses(teacher.id);
+      
+      const overviews = await api.getDashboardOverview();
 
-      if (classes.length === 0) {
+      if (overviews.length === 0) {
         setClassOverviews([]);
         return;
       }
 
-      const details = await Promise.all(
-        classes.map(async (classInfo) => {
-          const [students, dashboard, risk, assignments] = await Promise.all([
-            api.getStudents(classInfo.id),
-            api.getClassDashboard(classInfo.id),
-            api.getRiskSignals(classInfo.id),
-            api.getAssignments(classInfo.id),
-          ]);
-          const latestDue = assignments
-            .map((assignment) => assignment.due_at ?? assignment.published_at ?? assignment.created_at)
-            .filter((value): value is string => Boolean(value))
-            .sort()
-            .at(-1) ?? null;
+      const details = overviews.map((dashboard) => {
+        const latestDue = dashboard.trend
+          .map((t) => t.due_at)
+          .filter((value): value is string => Boolean(value))
+          .sort()
+          .at(-1) ?? null;
 
-          return {
-            classInfo,
-            studentCount: students.length,
-            atRiskCount: risk.signals.filter((item) => item.risk_level !== "low").length,
-            classAverage: dashboard.average_score_pct,
-            lastUpdatedLabel: relativeDateLabel(latestDue),
-          } satisfies ClassOverview;
-        })
-      );
+        return {
+          classInfo: {
+            id: dashboard.class_id,
+            teacher_id: 0,
+            name: dashboard.class_name,
+            subject: dashboard.subject,
+            term: null
+          },
+          studentCount: dashboard.total_students,
+          atRiskCount: dashboard.flagged_students ?? dashboard.at_risk_students ?? 0,
+          classAverage: dashboard.average_score_pct,
+          lastUpdatedLabel: relativeDateLabel(latestDue),
+        } satisfies ClassOverview;
+      });
+      
       setClassOverviews(details);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
@@ -126,6 +127,7 @@ export function DashboardPage() {
       if (csvInputRef.current) {
         csvInputRef.current.value = "";
       }
+      await refreshContext();
       await loadDashboard();
     } catch (err) {
       setCsvError(err instanceof Error ? err.message : "Failed to import CSV.");

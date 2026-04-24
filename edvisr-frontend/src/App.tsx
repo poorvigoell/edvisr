@@ -21,6 +21,8 @@ import { SignUpPage } from "./pages/SignUpPage";
 import { SetupPage } from "./pages/SetupPage";
 import { StudentProfilePage } from "./pages/StudentProfilePage";
 
+import { TeacherProvider } from "./contexts/TeacherContext";
+
 function RequireAuth({ children }: { children: ReactElement }) {
   const location = useLocation();
 
@@ -41,7 +43,9 @@ export default function App() {
         <Route
           element={
             <RequireAuth>
-              <AppLayout />
+              <TeacherProvider>
+                <AppLayout />
+              </TeacherProvider>
             </RequireAuth>
           }
         >

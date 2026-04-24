@@ -6,13 +6,7 @@ from google import genai
 # Load environment variables from .env
 load_dotenv()
 
-# Get API key
-api_key = os.getenv("GOOGLE_API_KEY")
-if not api_key:
-    raise RuntimeError("GOOGLE_API_KEY is not configured.")
-
-# Create ONE global client (do not recreate per request)
-client = genai.Client(api_key=api_key)
+from app.ai import get_ai_client
 
 
 def generate_questions(grade: str, topic: str, difficulty: str) -> str:
@@ -35,7 +29,7 @@ Instructions:
 Format the response clearly.
 """
 
-    response = client.models.generate_content(
+    response = get_ai_client().models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
     )

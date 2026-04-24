@@ -4,8 +4,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { Classroom, QuizDocument } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import type { QuizDocument } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 type McqQuestion = {
   question: string;
@@ -45,7 +45,7 @@ function parseQuizContent(raw: string): { mcqs: McqQuestion[]; theory: string[] 
 
 export function QuizPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [classes, setClasses] = useState<Classroom[]>([]);
+  const { classes } = useTeacher();
   const [savedClassId, setSavedClassId] = useState<number | null>(null);
   const [docs, setDocs] = useState<QuizDocument[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
@@ -65,17 +65,10 @@ export function QuizPage() {
   const showSaved = searchParams.get("view") === "saved";
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const { classes: classList } = await loadTeacherAndClasses();
-        setClasses(classList);
-        setSavedClassId(classList[0]?.id ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load classes.");
-      }
-    };
-    load();
-  }, []);
+    if (classes.length > 0 && savedClassId === null) {
+      setSavedClassId(classes[0].id);
+    }
+  }, [classes, savedClassId]);
 
   const parsed = useMemo(() => parseQuizContent(generatedQuiz), [generatedQuiz]);
 

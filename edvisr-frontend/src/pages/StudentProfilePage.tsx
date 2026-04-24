@@ -4,7 +4,9 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { StudentProfile, Teacher, TeacherNote } from "../lib/api";
+import type { StudentProfile, TeacherNote } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function riskLabel(profile: StudentProfile): "low" | "medium" | "high" {
   const avg = profile.average_score_pct ?? 0;
@@ -18,13 +20,13 @@ function riskLabel(profile: StudentProfile): "low" | "medium" | "high" {
 export function StudentProfilePage() {
   const { studentId } = useParams();
   const [searchParams] = useSearchParams();
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
+  const { teacher } = useTeacher();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [notes, setNotes] = useState<TeacherNote[]>([]);
   const [noteText, setNoteText] = useState("");
   const [interventionTaken, setInterventionTaken] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const classIdFromQuery = searchParams.get("classId");
@@ -56,12 +58,10 @@ export function StudentProfilePage() {
       try {
         setLoading(true);
         setError(null);
-        const [teacherData, profileData, notesData] = await Promise.all([
-          api.getMe(),
+        const [profileData, notesData] = await Promise.all([
           api.getStudentProfile(studentIdNumber),
           api.getStudentNotes(studentIdNumber),
         ]);
-        setTeacher(teacherData);
         setProfile(profileData);
         setNotes(notesData);
       } catch (err) {
@@ -126,21 +126,21 @@ export function StudentProfilePage() {
           <div className="grid-2">
             <article className="card">
               <h3>Performance Trend</h3>
-              <div className="line-chart">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <polyline
-                    points={profile.progress
-                      .map((item, index) => {
-                        const x = (index / Math.max(profile.progress.length - 1, 1)) * 100;
-                        const y = 100 - (item.score_pct ?? 0);
-                        return `${x},${y}`;
-                      })
-                      .join(" ")}
-                    fill="none"
-                    stroke="#4f46e5"
-                    strokeWidth="3"
-                  />
-                </svg>
+              <div className="line-chart" style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={profile.progress.map((item, i) => ({
+                    name: item.assignment_title || `A${i+1}`,
+                    score: item.score_pct ?? 0
+                  }))}>
+                    <XAxis dataKey="name" hide />
+                    <YAxis domain={[0, 100]} hide />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#151522', borderColor: '#2f2f44', borderRadius: '10px', color: '#f8f8fb' }}
+                      itemStyle={{ color: '#cdd0f5' }}
+                    />
+                    <Line type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </article>
 

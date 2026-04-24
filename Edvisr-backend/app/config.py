@@ -16,6 +16,7 @@ class Settings:
     auth_jwt_secret: str
     auth_access_token_exp_minutes: int
     auth_demo_password: str
+    demo_mode: bool
     underperform_threshold: float
     decline_threshold: float
     missing_submission_threshold: float
@@ -40,6 +41,7 @@ def load_settings() -> Settings:
         auth_jwt_secret=os.getenv("AUTH_JWT_SECRET", "change-me-in-production"),
         auth_access_token_exp_minutes=int(os.getenv("AUTH_ACCESS_TOKEN_EXP_MINUTES", "120")),
         auth_demo_password=os.getenv("AUTH_DEMO_PASSWORD", "edvisr123"),
+        demo_mode=os.getenv("DEMO_MODE", "true").lower() == "true",
         underperform_threshold=float(os.getenv("UNDERPERFORM_THRESHOLD", "0.55")),
         decline_threshold=float(os.getenv("DECLINE_THRESHOLD", "0.12")),
         missing_submission_threshold=float(os.getenv("MISSING_SUBMISSION_THRESHOLD", "0.30")),

@@ -13,6 +13,8 @@ ALGORITHM = "HS256"
 
 
 def verify_sign_in_password(password: str) -> bool:
+    if not settings.demo_mode:
+        return False
     return hmac.compare_digest(password, settings.auth_demo_password)
 
 

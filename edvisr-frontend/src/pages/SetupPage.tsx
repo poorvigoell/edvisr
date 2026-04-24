@@ -3,7 +3,8 @@ import type { FormEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { Classroom, ScoreRowPayload } from "../lib/api";
+import type { ScoreRowPayload } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 function parseScoresInput(raw: string): ScoreRowPayload[] {
   const lines = raw
@@ -67,7 +68,7 @@ function parseScoresInput(raw: string): ScoreRowPayload[] {
 }
 
 export function SetupPage() {
-  const [classes, setClasses] = useState<Classroom[]>([]);
+  const { classes, refreshContext } = useTeacher();
   const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [newClassName, setNewClassName] = useState("");
   const [newClassSubject, setNewClassSubject] = useState("");
@@ -76,29 +77,15 @@ export function SetupPage() {
   const [testMaxScore, setTestMaxScore] = useState("100");
   const [testDueDate, setTestDueDate] = useState("");
   const [scoresInput, setScoresInput] = useState("");
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const loadClasses = async () => {
-    try {
-      const teacher = await api.getMe();
-      const classList = await api.getClasses(teacher.id);
-      setClasses(classList);
-      if (!selectedClassId && classList.length > 0) {
-        setSelectedClassId(String(classList[0].id));
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load classes.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadClasses();
-  }, []);
+    if (!selectedClassId && classes.length > 0) {
+      setSelectedClassId(String(classes[0].id));
+    }
+  }, [classes, selectedClassId]);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -152,7 +139,7 @@ export function SetupPage() {
         `Imported. Students created: ${result.students_created}, tests created: ${result.assignments_created}, submissions updated: ${result.submissions_created_or_updated}.`
       );
       setScoresInput("");
-      await loadClasses();
+      await refreshContext();
       setSelectedClassId(String(result.class_id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to import scores.");
@@ -168,14 +155,13 @@ export function SetupPage() {
         subtitle="Enter class tests and student scores. EdVisr computes weak students, class averages, and analytics automatically."
       />
       <StatusMessages
-        loading={loading}
-        loadingText="Loading setup data..."
+        loading={saving}
+        loadingText="Saving setup data..."
         error={error}
         success={success}
       />
 
-      {!loading && (
-        <article className="card">
+      <article className="card">
           <form className="stack-sm" onSubmit={onSubmit}>
             <label className="muted">Target Class</label>
             <select
@@ -257,7 +243,6 @@ export function SetupPage() {
             </button>
           </form>
         </article>
-      )}
     </section>
   );
 }

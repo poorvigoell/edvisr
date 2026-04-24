@@ -4,26 +4,22 @@ import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
 import type {
-  Classroom,
   Student,
   StudentProfile,
-  Teacher,
   TeacherNote,
 } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import { useTeacher } from "../contexts/TeacherContext";
 
 export function InterventionsPage() {
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [classes, setClasses] = useState<Classroom[]>([]);
+  const { teacher, classes, selectedClassId, setSelectedClassId } = useTeacher();
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [notes, setNotes] = useState<TeacherNote[]>([]);
   const [noteText, setNoteText] = useState("");
   const [interventionAction, setInterventionAction] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,24 +27,6 @@ export function InterventionsPage() {
     () => students.find((item) => item.id === selectedStudentId) ?? null,
     [students, selectedStudentId]
   );
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const context = await loadTeacherAndClasses();
-        setTeacher(context.teacher);
-        setClasses(context.classes);
-        setSelectedClassId(context.classes[0].id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load context.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
 
   useEffect(() => {
     if (!selectedClassId) return;

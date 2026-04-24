@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -283,7 +283,7 @@ def ingest_simple_scores(
             submission.status = "missing" if is_missing else row.status
             submission.raw_score = None if is_missing else row.score
             submission.max_score = row.max_score or assignment.max_score
-            submission.submitted_at = None if is_missing else datetime.utcnow()
+            submission.submitted_at = None if is_missing else datetime.now(UTC)
             submissions_created_or_updated += 1
 
         class_students = db.scalars(

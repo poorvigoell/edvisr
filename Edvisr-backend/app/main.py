@@ -1,18 +1,26 @@
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 
-from .api import router
-from .auth import extract_bearer_token, verify_access_token
-from .config import settings
-from .database import Base, engine
-from . import models  # noqa: F401
+from app.routers import auth, classes, analytics, ingestion, quiz, notes
+from app.config import settings
+from app.database import engine
+from app import models
+from app.limiter import limiter
+
+# Basic logging
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="EdVisr classroom insight and early intervention API",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,39 +30,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.middleware("http")
-async def auth_middleware(request: Request, call_next):
-    path = request.url.path
-    is_api_path = path.startswith(settings.api_prefix)
-    is_public_api_path = path in {
-        f"{settings.api_prefix}/auth/sign-in",
-        f"{settings.api_prefix}/auth/sign-up",
-        f"{settings.api_prefix}/health",
-    }
-
-    if request.method == "OPTIONS":
-        return await call_next(request)
-
-    if is_api_path and not is_public_api_path:
-        token = extract_bearer_token(request.headers.get("Authorization"))
-        if token is None:
-            return JSONResponse(status_code=401, content={"detail": "Missing bearer token."})
-
-        try:
-            verify_access_token(token)
-        except ValueError as exc:
-            return JSONResponse(status_code=401, content={"detail": str(exc)})
-
-    return await call_next(request)
-
-
-@app.on_event("startup")
-def on_startup() -> None:
-    Base.metadata.create_all(bind=engine)
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
 
 @app.get("/")
 def root() -> dict[str, str]:
     return {"message": "EdVisr API is running"}
 
-app.include_router(router, prefix=settings.api_prefix)
+app.include_router(auth.router, prefix=settings.api_prefix)
+app.include_router(classes.router, prefix=settings.api_prefix)
+app.include_router(analytics.router, prefix=settings.api_prefix)
+app.include_router(ingestion.router, prefix=settings.api_prefix)
+app.include_router(quiz.router, prefix=settings.api_prefix)
+app.include_router(notes.router, prefix=settings.api_prefix)

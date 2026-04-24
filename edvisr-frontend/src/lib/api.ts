@@ -62,6 +62,7 @@ export type ClassDashboard = {
   average_score_pct: number;
   submission_rate_pct: number;
   at_risk_students: number;
+  flagged_students?: number;
   score_distribution: ScoreBand[];
   trend: TrendPoint[];
 };
@@ -275,8 +276,9 @@ export const api = {
     }),
   getMe: () => request<Teacher>("/auth/me"),
   getTeachers: () => request<Teacher[]>("/teachers"),
-  getClasses: (teacherId: number) =>
-    request<Classroom[]>(`/classes?teacher_id=${teacherId}`),
+  getClasses: () => request<Classroom[]>("/classes"),
+  getDashboardOverview: () => request<ClassDashboard[]>("/analytics/dashboard/overview"),
+  getAlertsCount: () => request<{ count: number }>("/analytics/alerts/count"),
   getStudents: (classId: number) =>
     request<Student[]>(`/students?class_id=${classId}`),
   getAssignments: (classId: number) =>

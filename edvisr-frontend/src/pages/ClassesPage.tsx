@@ -2,36 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
-import type { Classroom, Student } from "../lib/api";
+import type { Student } from "../lib/api";
 import { api } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import { useTeacher } from "../contexts/TeacherContext";
 
 export function ClassesPage() {
   const navigate = useNavigate();
-  const [classes, setClasses] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const { classes, selectedClassId, setSelectedClassId } = useTeacher();
   const [students, setStudents] = useState<Student[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const { classes: classList } = await loadTeacherAndClasses();
-        setClasses(classList);
-        setSelectedClassId((current) => current ?? classList[0]?.id ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load classes.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const loading = false;
+  const error = null;
 
   useEffect(() => {
     if (!selectedClassId) {

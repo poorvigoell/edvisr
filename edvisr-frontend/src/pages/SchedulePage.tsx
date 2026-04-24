@@ -3,17 +3,16 @@ import type { FormEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { ClassDashboard, Classroom } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import type { ClassDashboard } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 export function SchedulePage() {
-  const [classes, setClasses] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const { classes, selectedClassId, setSelectedClassId } = useTeacher();
   const [dashboard, setDashboard] = useState<ClassDashboard | null>(null);
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentMaxScore, setAssignmentMaxScore] = useState("100");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -23,41 +22,16 @@ export function SchedulePage() {
     try {
       const data = await api.getClassDashboard(classId);
       setDashboard(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load schedule.");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const { classes: classList } = await loadTeacherAndClasses();
-        setClasses(classList);
-        setSelectedClassId(classList[0].id);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load classes.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
     if (!selectedClassId) return;
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getClassDashboard(selectedClassId);
-        setDashboard(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load schedule.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadDashboardData();
+    loadDashboard(selectedClassId);
   }, [selectedClassId]);
 
   const onAddScheduleItem = async (event: FormEvent<HTMLFormElement>) => {

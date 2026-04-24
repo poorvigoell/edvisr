@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { ClassDashboard, Classroom, ConceptInsightsResponse, RiskSignalsResponse } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import type { ClassDashboard, ConceptInsightsResponse, RiskSignalsResponse } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
+
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function riskTypeTagClass(riskType: string): string {
   const normalized = riskType.trim().toLowerCase();
@@ -17,35 +19,22 @@ function riskTypeTagClass(riskType: string): string {
 export function AnalyticsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [classes, setClasses] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const { classes, selectedClassId, setSelectedClassId } = useTeacher();
   const [dashboard, setDashboard] = useState<ClassDashboard | null>(null);
   const [concepts, setConcepts] = useState<ConceptInsightsResponse | null>(null);
   const [riskSignals, setRiskSignals] = useState<RiskSignalsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadBase = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const { classes: classList } = await loadTeacherAndClasses();
-        setClasses(classList);
-        const classFromQuery = Number(searchParams.get("classId"));
-        const selected =
-          classList.find((item) => item.id === classFromQuery)?.id ??
-          classList[0]?.id ??
-          null;
-        setSelectedClassId(selected);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load classes.");
-      } finally {
-        setLoading(false);
+    const classFromQuery = searchParams.get("classId");
+    if (classFromQuery && classes.length > 0) {
+      const parsedId = Number(classFromQuery);
+      if (classes.some((item) => item.id === parsedId)) {
+        setSelectedClassId(parsedId);
       }
-    };
-    loadBase();
-  }, [searchParams]);
+    }
+  }, [searchParams, classes, setSelectedClassId]);
 
   useEffect(() => {
     if (!selectedClassId) return;
@@ -69,18 +58,6 @@ export function AnalyticsPage() {
     };
     load();
   }, [selectedClassId]);
-
-  const trendPoints = useMemo(() => {
-    if (!dashboard || dashboard.trend.length === 0) return "";
-    const max = Math.max(...dashboard.trend.map((item) => item.average_score_pct), 1);
-    return dashboard.trend
-      .map((item, index) => {
-        const x = (index / Math.max(dashboard.trend.length - 1, 1)) * 100;
-        const y = 100 - (item.average_score_pct / max) * 100;
-        return `${x},${y}`;
-      })
-      .join(" ");
-  }, [dashboard]);
 
   const activeSignals = useMemo(
     () => riskSignals?.signals.filter((student) => student.risk_level !== "low") ?? [],
@@ -113,10 +90,21 @@ export function AnalyticsPage() {
           <div className="grid-2">
             <article className="card">
               <h3>Performance Overview</h3>
-              <div className="line-chart">
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <polyline points={trendPoints} fill="none" stroke="#4f46e5" strokeWidth="3" />
-                </svg>
+              <div className="line-chart" style={{ height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={dashboard.trend.map((t, i) => ({
+                    name: t.assignment_title || `A${i+1}`,
+                    score: t.average_score_pct
+                  }))}>
+                    <XAxis dataKey="name" hide />
+                    <YAxis domain={[0, 100]} hide />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#151522', borderColor: '#2f2f44', borderRadius: '10px', color: '#f8f8fb' }}
+                      itemStyle={{ color: '#cdd0f5' }}
+                    />
+                    <Line type="monotone" dataKey="score" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
               <p className="muted">Class average trend across assignments.</p>
             </article>

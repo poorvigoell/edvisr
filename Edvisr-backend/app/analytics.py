@@ -101,7 +101,7 @@ def class_dashboard(db: Session, class_id: int) -> dict[str, Any]:
     submitted_count = len([s for s in submissions if s.status in {"submitted", "late"}])
     submission_rate_pct = round((submitted_count / expected_submissions) * 100, 2) if expected_submissions else 0.0
 
-    score_distribution = {"90-100": 0, "80-89": 0, "70-79": 0, "Below 60": 0}
+    score_distribution = {"90-100": 0, "80-89": 0, "70-79": 0, "60-69": 0, "Below 60": 0}
     for ratio in valid_ratios:
         pct = ratio * 100
         if pct >= 90:
@@ -110,10 +110,9 @@ def class_dashboard(db: Session, class_id: int) -> dict[str, Any]:
             score_distribution["80-89"] += 1
         elif pct >= 70:
             score_distribution["70-79"] += 1
-        elif pct < 60:
-            score_distribution["Below 60"] += 1
+        elif pct >= 60:
+            score_distribution["60-69"] += 1
         else:
-            # Keep a four-bucket view by folding 60-69 into the lowest performance band.
             score_distribution["Below 60"] += 1
 
     trend = []

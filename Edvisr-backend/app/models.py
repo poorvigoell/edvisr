@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
@@ -13,7 +13,7 @@ class Teacher(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     classes: Mapped[list["Classroom"]] = relationship(back_populates="teacher", cascade="all, delete-orphan")
     notes: Mapped[list["TeacherNote"]] = relationship(back_populates="teacher", cascade="all, delete-orphan")
@@ -30,7 +30,7 @@ class TeacherCredential(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     teacher_id: Mapped[int] = mapped_column(ForeignKey("teachers.id"), unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     teacher: Mapped["Teacher"] = relationship(back_populates="credential")
 
@@ -45,7 +45,7 @@ class Classroom(Base):
     term: Mapped[str | None] = mapped_column(String(120))
     platform_source: Mapped[str | None] = mapped_column(String(120))
     external_id: Mapped[str | None] = mapped_column(String(255), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     teacher: Mapped["Teacher"] = relationship(back_populates="classes")
     students: Mapped[list["Student"]] = relationship(back_populates="classroom", cascade="all, delete-orphan")
@@ -66,7 +66,7 @@ class Student(Base):
     roll_number: Mapped[str | None] = mapped_column(String(100))
     email: Mapped[str | None] = mapped_column(String(255), index=True)
     external_id: Mapped[str | None] = mapped_column(String(255))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     classroom: Mapped["Classroom"] = relationship(back_populates="students")
     submissions: Mapped[list["Submission"]] = relationship(back_populates="student", cascade="all, delete-orphan")
@@ -85,7 +85,7 @@ class Assignment(Base):
     max_score: Mapped[float] = mapped_column(Float, default=100.0)
     due_at: Mapped[datetime | None] = mapped_column(DateTime)
     published_at: Mapped[datetime | None] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     classroom: Mapped["Classroom"] = relationship(back_populates="assignments")
     submissions: Mapped[list["Submission"]] = relationship(back_populates="assignment", cascade="all, delete-orphan")
@@ -104,7 +104,7 @@ class Submission(Base):
     max_score: Mapped[float | None] = mapped_column(Float)
     rubric_json: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     question_responses_json: Mapped[list[dict[str, Any]] | None] = mapped_column(JSON)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     assignment: Mapped["Assignment"] = relationship(back_populates="submissions")
     student: Mapped["Student"] = relationship(back_populates="submissions")
@@ -120,11 +120,11 @@ class TeacherNote(Base):
     intervention_action: Mapped[str | None] = mapped_column(Text)
     follow_up_date: Mapped[date | None] = mapped_column(Date)
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -142,7 +142,7 @@ class Insight(Base):
     severity: Mapped[str] = mapped_column(String(20), default="medium", nullable=False)
     payload_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     classroom: Mapped["Classroom"] = relationship(back_populates="insights")
     student: Mapped["Student"] = relationship(back_populates="insights")
@@ -158,4 +158,4 @@ class QuizDocument(Base):
     topic: Mapped[str] = mapped_column(String(255))
     difficulty: Mapped[str] = mapped_column(String(50))
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC), nullable=False)

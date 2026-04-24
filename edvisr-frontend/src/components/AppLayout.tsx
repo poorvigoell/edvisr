@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { api, setAuthToken } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import { setAuthToken } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000;
 
@@ -15,29 +15,8 @@ const links = [
 
 export function AppLayout() {
   const navigate = useNavigate();
-  const [teacherName, setTeacherName] = useState("Teacher");
-  const [riskAlerts, setRiskAlerts] = useState(0);
+  const { teacher, alertsCount, logout } = useTeacher();
   const inactivityTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    const loadHeaderData = async () => {
-      try {
-        const me = await api.getMe();
-        setTeacherName(me.full_name);
-        const { classes } = await loadTeacherAndClasses();
-        const risks = await Promise.all(classes.map((item) => api.getRiskSignals(item.id)));
-        const totalAlerts = risks.reduce(
-          (sum, item) => sum + item.signals.filter((signal) => signal.risk_level !== "low").length,
-          0
-        );
-        setRiskAlerts(totalAlerts);
-      } catch {
-        setTeacherName("Teacher");
-        setRiskAlerts(0);
-      }
-    };
-    loadHeaderData();
-  }, []);
 
   useEffect(() => {
     const clearInactivityTimer = () => {
@@ -84,6 +63,7 @@ export function AppLayout() {
   }, [navigate]);
 
   const onSignOut = () => {
+    logout();
     setAuthToken(null);
     navigate("/sign-in", { replace: true });
   };
@@ -113,11 +93,11 @@ export function AppLayout() {
         <header className="topbar">
           <div className="topbar-item">
             <span className="muted">Teacher</span>
-            <strong>{teacherName}</strong>
+            <strong>{teacher?.full_name || "Teacher"}</strong>
           </div>
           <div className="topbar-item">
             <span className="muted">Notifications</span>
-            <strong>{riskAlerts} risk alerts</strong>
+            <strong>{alertsCount} risk alerts</strong>
           </div>
           <button type="button" className="btn" onClick={onSignOut}>
             Logout

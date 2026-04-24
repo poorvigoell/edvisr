@@ -3,31 +3,14 @@ import { Link } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { StatusMessages } from "../components/StatusMessages";
 import { api } from "../lib/api";
-import type { Classroom, QuizDocument } from "../lib/api";
-import { loadTeacherAndClasses } from "../lib/context";
+import type { QuizDocument } from "../lib/api";
+import { useTeacher } from "../contexts/TeacherContext";
 
 export function SavedQuizzesPage() {
-  const [classes, setClasses] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const { classes, selectedClassId, setSelectedClassId } = useTeacher();
   const [docs, setDocs] = useState<QuizDocument[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const { classes: classList } = await loadTeacherAndClasses();
-        setClasses(classList);
-        setSelectedClassId(classList[0]?.id ?? null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load classes.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
 
   useEffect(() => {
     if (!selectedClassId) return;
