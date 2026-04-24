@@ -51,8 +51,8 @@ def get_alerts_count(teacher: Teacher = Depends(get_current_teacher), db: Sessio
     )
     return {"count": int(count or 0)}
 
-@router.get("/alerts")
-def get_all_alerts(teacher: Teacher = Depends(get_current_teacher), db: Session = Depends(get_db)) -> list[dict]:
+@router.get("/alerts", response_model=list[InsightRead])
+def get_all_alerts(teacher: Teacher = Depends(get_current_teacher), db: Session = Depends(get_db)) -> list[Insight]:
     insights = db.scalars(
         select(Insight)
         .join(Classroom, Insight.class_id == Classroom.id)
