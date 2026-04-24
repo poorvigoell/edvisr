@@ -156,6 +156,81 @@ export function DashboardPage() {
     };
   }, [classOverviews]);
 
+  if (!loading && !error && classOverviews.length === 0) {
+    return (
+      <section className="stack" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <article className="card" style={{ maxWidth: '600px', width: '100%', padding: '3rem', textAlign: 'center', boxShadow: '0 20px 50px -10px rgba(0,0,0,0.5)' }}>
+          <div className="stack">
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👋</div>
+            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Welcome to EdVisr!</h1>
+            <p className="muted" style={{ fontSize: '1.1rem', marginBottom: '2.5rem' }}>
+              We're excited to help you gain deeper insights into your students' performance. 
+              Let's set up your first class to get started.
+            </p>
+            
+            <form className="stack-sm" onSubmit={handleCsvImport} style={{ textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '15px' }}>
+              <h3 style={{ marginBottom: '1rem' }}>Step 1: Import Class Data</h3>
+              <p className="muted" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                Upload a CSV file with your student scores. EdVisr will automatically 
+                create students and identify risk patterns for you.
+              </p>
+              
+              <div className="stack-sm">
+                <label className="muted" style={{ fontSize: '0.8rem' }}>Class Name (e.g. NCERT Class 10A)</label>
+                <input
+                  className="input"
+                  type="text"
+                  value={csvClassName}
+                  onChange={(event) => setCsvClassName(event.target.value)}
+                  placeholder="Class name"
+                  required
+                />
+              </div>
+
+              <div className="stack-sm">
+                <label className="muted" style={{ fontSize: '0.8rem' }}>Subject (e.g. Science)</label>
+                <input
+                  className="input"
+                  type="text"
+                  value={csvSubject}
+                  onChange={(event) => setCsvSubject(event.target.value)}
+                  placeholder="Subject"
+                  required
+                />
+              </div>
+
+              <div className="stack-sm" style={{ marginTop: '1rem' }}>
+                <input
+                  ref={csvInputRef}
+                  className="input"
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleCsvChange}
+                  style={{ padding: '1rem', border: '2px dashed #2f2f44' }}
+                />
+              </div>
+
+              {csvError && <p className="text-danger" style={{ marginTop: '1rem' }}>{csvError}</p>}
+              {csvSuccess && <p className="text-ok" style={{ marginTop: '1rem' }}>{csvSuccess}</p>}
+
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                disabled={csvImporting} 
+                style={{ width: '100%', padding: '1rem', marginTop: '1.5rem', fontSize: '1.1rem' }}
+              >
+                {csvImporting ? "Processing..." : "Create My First Class ✨"}
+              </button>
+            </form>
+            <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.8rem' }}>
+              Need help? Download our <a href="#" style={{ color: '#4f46e5' }}>sample CSV template</a> to see the required format.
+            </p>
+          </div>
+        </article>
+      </section>
+    );
+  }
+
   return (
     <section className="stack">
       <PageHeader
@@ -238,12 +313,6 @@ export function DashboardPage() {
                 </button>
               </article>
             ))}
-            {classOverviews.length === 0 && (
-              <article className="class-card">
-                <h3>No classes yet</h3>
-                <p className="muted">Create or import class data to begin analysis.</p>
-              </article>
-            )}
           </div>
         </>
       )}

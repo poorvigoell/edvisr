@@ -91,6 +91,30 @@ export function QuizPage() {
     loadSavedDocs();
   }, [showSaved, savedClassId]);
 
+  useEffect(() => {
+    const topic = searchParams.get("topic");
+    if (topic && !generatedQuiz && !generatingQuiz) {
+      setQuizTopic(topic);
+      const autoGenerate = async () => {
+        try {
+          setGeneratingQuiz(true);
+          setError(null);
+          const quiz = await api.generateQuizQuestions({
+            grade: quizGrade,
+            topic: topic,
+            difficulty: quizDifficulty,
+          });
+          setGeneratedQuiz(quiz.content);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to auto-generate remedial quiz.");
+        } finally {
+          setGeneratingQuiz(false);
+        }
+      };
+      autoGenerate();
+    }
+  }, [searchParams, quizGrade, quizDifficulty, generatedQuiz, generatingQuiz]);
+
   const setSavedVisibility = (open: boolean) => {
     const params = new URLSearchParams(searchParams);
     if (open) {

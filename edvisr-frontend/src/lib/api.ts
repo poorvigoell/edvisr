@@ -279,6 +279,7 @@ export const api = {
   getClasses: () => request<Classroom[]>("/classes"),
   getDashboardOverview: () => request<ClassDashboard[]>("/analytics/dashboard/overview"),
   getAlertsCount: () => request<{ count: number }>("/analytics/alerts/count"),
+  getAlerts: () => request<any[]>("/analytics/alerts"),
   getStudents: (classId: number) =>
     request<Student[]>(`/students?class_id=${classId}`),
   getAssignments: (classId: number) =>
@@ -387,4 +388,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getStudentRecommendations: (studentId: number) =>
+    request<{ recommendations: string }>(`/analytics/students/${studentId}/recommendations`),
 };

@@ -172,6 +172,7 @@ export function AnalyticsPage() {
                   <th>Concept</th>
                   <th>Class Avg</th>
                   <th>Weakness Level</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -181,6 +182,15 @@ export function AnalyticsPage() {
                     <td>{concept.average_score_pct}%</td>
                     <td className={concept.weakness_level === "high" ? "text-danger" : concept.weakness_level === "medium" ? "text-warn" : "text-ok"}>
                       {concept.weakness_level.toUpperCase()}
+                    </td>
+                    <td>
+                      <button 
+                        className="btn btn-primary" 
+                        style={{ padding: '4px 12px', fontSize: '12px' }}
+                        onClick={() => navigate(`/quiz?topic=${encodeURIComponent(concept.concept)}`)}
+                      >
+                        Remedial Quiz
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -98,6 +98,23 @@ export function StudentProfilePage() {
     }
   };
 
+  const [recommendations, setRecommendations] = useState<string | null>(null);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+
+  const getRecommendations = async () => {
+    if (!studentIdNumber) return;
+    try {
+      setLoadingRecs(true);
+      setError(null);
+      const data = await api.getStudentRecommendations(studentIdNumber);
+      setRecommendations(data.recommendations);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to get AI recommendations.");
+    } finally {
+      setLoadingRecs(false);
+    }
+  };
+
   return (
     <section className="stack">
       <PageHeader
@@ -147,6 +164,21 @@ export function StudentProfilePage() {
             <article className="card">
               <h3>Analytics Summary</h3>
               <p>{summaryText}</p>
+              <div className="stack-sm" style={{ marginTop: '1rem' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={getRecommendations}
+                  disabled={loadingRecs}
+                >
+                  {loadingRecs ? "Thinking..." : "✨ Ask AI for Strategies"}
+                </button>
+                {recommendations && (
+                  <div className="subcard" style={{ whiteSpace: 'pre-wrap', borderLeft: '4px solid #4f46e5' }}>
+                    <strong>AI Recommendations:</strong>
+                    <p style={{ fontSize: '0.9rem', color: '#cdd0f5', marginTop: '0.5rem' }}>{recommendations}</p>
+                  </div>
+                )}
+              </div>
             </article>
           </div>
 

@@ -8,6 +8,7 @@ type TeacherContextType = {
   classes: Classroom[];
   selectedClassId: number | null;
   alertsCount: number;
+  alerts: any[];
   isLoading: boolean;
   setSelectedClassId: (id: number | null) => void;
   refreshContext: () => Promise<void>;
@@ -21,6 +22,7 @@ export function TeacherProvider({ children }: { children: ReactNode }) {
   const [classes, setClasses] = useState<Classroom[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [alertsCount, setAlertsCount] = useState<number>(0);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchContextData = async () => {
@@ -36,10 +38,14 @@ export function TeacherProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const { count } = await api.getAlertsCount();
+        const [{ count }, myAlerts] = await Promise.all([
+          api.getAlertsCount(),
+          api.getAlerts()
+        ]);
         setAlertsCount(count);
+        setAlerts(myAlerts);
       } catch (err) {
-        console.error("Failed to fetch alerts count", err);
+        console.error("Failed to fetch alerts data", err);
       }
     } catch (err) {
       setTeacher(null);
@@ -72,6 +78,7 @@ export function TeacherProvider({ children }: { children: ReactNode }) {
         classes,
         selectedClassId,
         alertsCount,
+        alerts,
         isLoading,
         setSelectedClassId,
         refreshContext,
