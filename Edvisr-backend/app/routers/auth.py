@@ -62,15 +62,6 @@ def sign_up(payload: SignUpRequest, db: Session = Depends(get_db)) -> dict:
     db.add(teacher)
     db.flush()
 
-    starter_classroom = Classroom(
-        teacher_id=teacher.id,
-        name="My Class",
-        subject="General",
-        term="Current Term",
-        platform_source="manual",
-    )
-    db.add(starter_classroom)
-
     credential = TeacherCredential(
         teacher_id=teacher.id,
         password_hash=hash_password(payload.password),

@@ -13,6 +13,9 @@ from app.limiter import limiter
 # Basic logging
 logging.basicConfig(level=logging.INFO)
 
+# Initialize database tables
+models.Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,

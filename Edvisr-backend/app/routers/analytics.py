@@ -11,6 +11,7 @@ from app.schemas import (
     ConceptInsightsResponse,
     RiskSignalsResponse,
     StudentProfileResponse,
+    InsightRead,
 )
 from app.recommendations import get_intervention_recommendations
 from app.analytics import _student_weak_concepts

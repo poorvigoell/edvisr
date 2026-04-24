@@ -1,5 +1,9 @@
 import os
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+# Load .env file explicitly
+load_dotenv()
 
 
 def _parse_origins(raw: str) -> list[str]:

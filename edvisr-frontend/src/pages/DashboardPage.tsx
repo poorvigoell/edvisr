@@ -42,7 +42,7 @@ export function DashboardPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       const overviews = await api.getDashboardOverview();
 
       if (overviews.length === 0) {
@@ -71,7 +71,7 @@ export function DashboardPage() {
           lastUpdatedLabel: relativeDateLabel(latestDue),
         } satisfies ClassOverview;
       });
-      
+
       setClassOverviews(details);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard.");
@@ -143,9 +143,9 @@ export function DashboardPage() {
     const overallAverage =
       totalClasses > 0
         ? (
-            classOverviews.reduce((sum, item) => sum + item.classAverage, 0) /
-            totalClasses
-          ).toFixed(1)
+          classOverviews.reduce((sum, item) => sum + item.classAverage, 0) /
+          totalClasses
+        ).toFixed(1)
         : "0.0";
 
     return {
@@ -158,75 +158,135 @@ export function DashboardPage() {
 
   if (!loading && !error && classOverviews.length === 0) {
     return (
-      <section className="stack" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <article className="card" style={{ maxWidth: '600px', width: '100%', padding: '3rem', textAlign: 'center', boxShadow: '0 20px 50px -10px rgba(0,0,0,0.5)' }}>
-          <div className="stack">
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👋</div>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Welcome to EdVisr!</h1>
-            <p className="muted" style={{ fontSize: '1.1rem', marginBottom: '2.5rem' }}>
-              We're excited to help you gain deeper insights into your students' performance. 
-              Let's set up your first class to get started.
-            </p>
-            
-            <form className="stack-sm" onSubmit={handleCsvImport} style={{ textAlign: 'left', background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '15px' }}>
-              <h3 style={{ marginBottom: '1rem' }}>Step 1: Import Class Data</h3>
-              <p className="muted" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                Upload a CSV file with your student scores. EdVisr will automatically 
-                create students and identify risk patterns for you.
+      <section className="stack" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ maxWidth: '800px', width: '100%', textAlign: 'center' }}>
+          <div className="stack" style={{ gap: '3rem' }}>
+            <div className="stack-sm">
+              <div style={{
+                fontSize: '4rem',
+                marginBottom: '1rem',
+                animation: 'fade-in 1s ease-out'
+              }}></div>
+              <h1 style={{
+                fontSize: '3.5rem',
+                fontWeight: 800,
+                letterSpacing: '-0.03em',
+                background: 'linear-gradient(135deg, #fff, #c4b5fd)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                marginBottom: '1rem'
+              }}>
+                Welcome to EdVisr!
+              </h1>
+              <p className="muted" style={{ fontSize: '1.2rem', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                The intelligent workspace for modern educators.
+                Let's get your first class synced and start analyzing student performance.
               </p>
-              
-              <div className="stack-sm">
-                <label className="muted" style={{ fontSize: '0.8rem' }}>Class Name (e.g. NCERT Class 10A)</label>
-                <input
-                  className="input"
-                  type="text"
-                  value={csvClassName}
-                  onChange={(event) => setCsvClassName(event.target.value)}
-                  placeholder="Class name"
-                  required
-                />
-              </div>
+            </div>
 
-              <div className="stack-sm">
-                <label className="muted" style={{ fontSize: '0.8rem' }}>Subject (e.g. Science)</label>
-                <input
-                  className="input"
-                  type="text"
-                  value={csvSubject}
-                  onChange={(event) => setCsvSubject(event.target.value)}
-                  placeholder="Subject"
-                  required
-                />
-              </div>
+            <div className="card" style={{
+              textAlign: 'left',
+              padding: '3rem',
+              border: '1px solid var(--border)',
+              background: 'rgba(21, 21, 34, 0.4)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '24px',
+              boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.45)'
+            }}>
+              <form className="stack" onSubmit={handleCsvImport}>
+                <div className="row row-space" style={{ alignItems: 'flex-start' }}>
+                  <div className="stack-sm">
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Quick Setup</h2>
+                    <p className="muted" style={{ fontSize: '0.9rem' }}>Upload your latest test scores to begin.</p>
+                  </div>
+                  <div className="risk-tag risk-tag-other" style={{ padding: '6px 12px' }}>STEP 1/1</div>
+                </div>
 
-              <div className="stack-sm" style={{ marginTop: '1rem' }}>
-                <input
-                  ref={csvInputRef}
-                  className="input"
-                  type="file"
-                  accept=".csv,text/csv"
-                  onChange={handleCsvChange}
-                  style={{ padding: '1rem', border: '2px dashed #2f2f44' }}
-                />
-              </div>
+                <div className="grid-2" style={{ marginTop: '1rem' }}>
+                  <div className="stack-sm">
+                    <label className="muted" style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>CLASS NAME</label>
+                    <input
+                      className="input"
+                      type="text"
+                      value={csvClassName}
+                      onChange={(event) => setCsvClassName(event.target.value)}
+                      placeholder="e.g. 10th Grade Biology"
+                      required
+                      style={{ padding: '12px 16px', fontSize: '1rem' }}
+                    />
+                  </div>
+                  <div className="stack-sm">
+                    <label className="muted" style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>SUBJECT</label>
+                    <input
+                      className="input"
+                      type="text"
+                      value={csvSubject}
+                      onChange={(event) => setCsvSubject(event.target.value)}
+                      placeholder="e.g. Science"
+                      required
+                      style={{ padding: '12px 16px', fontSize: '1rem' }}
+                    />
+                  </div>
+                </div>
 
-              {csvError && <p className="text-danger" style={{ marginTop: '1rem' }}>{csvError}</p>}
-              {csvSuccess && <p className="text-ok" style={{ marginTop: '1rem' }}>{csvSuccess}</p>}
+                <div className="stack-sm" style={{ marginTop: '1rem' }}>
+                  <label className="muted" style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>UPLOAD SCORES (CSV)</label>
+                  <div
+                    className="input"
+                    style={{
+                      padding: '2rem',
+                      border: '2px dashed var(--border)',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      position: 'relative'
+                    }}
+                    onClick={() => csvInputRef.current?.click()}
+                  >
+                    <input
+                      ref={csvInputRef}
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={handleCsvChange}
+                      style={{ display: 'none' }}
+                    />
+                    {csvFile ? (
+                      <div className="text-ok">✅ {csvFile.name}</div>
+                    ) : (
+                      <div className="muted">Click to select or drag your CSV file here</div>
+                    )}
+                  </div>
+                </div>
 
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                disabled={csvImporting} 
-                style={{ width: '100%', padding: '1rem', marginTop: '1.5rem', fontSize: '1.1rem' }}
-              >
-                {csvImporting ? "Processing..." : "Create My First Class ✨"}
-              </button>
-            </form>
-            <p className="muted" style={{ marginTop: '1.5rem', fontSize: '0.8rem' }}>
-              Need help? Download our <a href="#" style={{ color: '#4f46e5' }}>sample CSV template</a> to see the required format.
-            </p>
+                {csvError && <p className="text-danger" style={{ textAlign: 'center' }}>{csvError}</p>}
+                {csvSuccess && <p className="text-ok" style={{ textAlign: 'center' }}>{csvSuccess}</p>}
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={csvImporting}
+                  style={{
+                    padding: '16px',
+                    fontSize: '1.1rem',
+                    borderRadius: '12px',
+                    marginTop: '1rem'
+                  }}
+                >
+                  {csvImporting ? "Processing Data..." : "Launch Dashboard ✨"}
+                </button>
+              </form>
+            </div>
+
+            <div className="row" style={{ justifyContent: 'center', gap: '2rem' }}>
+              <p className="muted" style={{ fontSize: '0.9rem' }}>
+                Don't have a CSV? <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>Download Template</a>
+              </p>
+              <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
+              <p className="muted" style={{ fontSize: '0.9rem' }}>
+                Need help? <a href="#" style={{ color: 'var(--primary)', fontWeight: 600 }}>View Tutorial</a>
+              </p>
+            </div>
           </div>
-        </article>
+        </div>
       </section>
     );
   }
