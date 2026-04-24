@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from dotenv import load_dotenv
-from google import genai
+
 
 # Load environment variables
 load_dotenv()
@@ -30,15 +30,15 @@ Output format:
 - A single sentence phrased as a question
 """
 
-    response = get_ai_client().models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
-        config={
-            "temperature": 0.7,
-            "top_p": 0.9,
-            # "top_k": 40,
-            "max_output_tokens": 800,
-        },
+    completion = get_ai_client().chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "You are an expert educator and question designer."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.7,
+        top_p=0.9,
+        max_tokens=800,
     )
 
-    return response.text or ""
+    return completion.choices[0].message.content or ""

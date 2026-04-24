@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from dotenv import load_dotenv
-from google import genai
+
 
 # Load environment variables from .env
 load_dotenv()
@@ -29,9 +29,13 @@ Instructions:
 Format the response clearly.
 """
 
-    response = get_ai_client().models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt,
+    completion = get_ai_client().chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "You are a helpful educational assistant specialized in NCERT curriculum."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.7,
     )
 
-    return response.text or ""
+    return completion.choices[0].message.content or ""
